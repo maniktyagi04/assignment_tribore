@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shocase — Demo Analytics Test Page</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f0f;
+      color: #e8e8e8;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 40px 16px 60px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    header {
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    header h1 span {
+      color: #7c6fef;
+    }
+
+    header p.subtitle {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      color: #666;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Video card ── */
+    .video-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .video-card video {
+      display: block;
+      width: 100%;
+    }
+
+    /* ── Meta strip below video ── */
+    .meta-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 14px 18px;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #7c6fef22;
+      border: 1px solid #7c6fef55;
+      border-radius: 999px;
+      padding: 3px 12px;
+      font-size: 0.75rem;
+      color: #a89ff7;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .badge::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #7c6fef;
+    }
+
+    .hint {
+      font-size: 0.72rem;
+      color: #555;
+    }
+
+    .hint code {
+      background: #252525;
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #888;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    /* ── Viewer ID line ── */
+    .viewer-line {
+      margin-top: 18px;
+      font-size: 0.75rem;
+      color: #444;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    .viewer-line strong {
+      color: #666;
+    }
+
+    /* ── Event log ── */
+    .log-section {
+      margin-top: 28px;
+    }
+
+    .log-section h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    .log-box {
+      background: #141414;
+      border: 1px solid #242424;
+      border-radius: 8px;
+      height: 200px;
+      overflow-y: scroll;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column-reverse; /* newest at top without JS reordering */
+    }
+
+    /* scrollbar */
+    .log-box::-webkit-scrollbar { width: 4px; }
+    .log-box::-webkit-scrollbar-track { background: transparent; }
+    .log-box::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 2px; }
+
+    .log-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-entry {
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.72rem;
+      color: #4caf50;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .log-entry .ts  { color: #555; }
+    .log-entry .ev  { color: #a89ff7; font-weight: 600; }
+    .log-entry .sep { color: #333; margin: 0 4px; }
+    .log-entry .did { color: #5c9eff; }
+
+    .log-empty {
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.72rem;
+      color: #333;
+      font-style: italic;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <h1>Shocase <span>—</span> Demo Analytics Test Page</h1>
+      <p class="subtitle">Phase 3 · Tracker integration test environment</p>
+    </header>
+
+    <!-- Video card -->
+    <div class="video-card">
+      <video
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        controls
+        preload="metadata"
+      ></video>
+
+      <div class="meta-strip">
+        <span class="badge" id="demo-badge">demo_001</span>
+        <span class="hint">Open the dashboard at <code>GET /demos/demo_001/stats</code></span>
+      </div>
+    </div>
+
+    <!-- Viewer ID -->
+    <p class="viewer-line">
+      <strong>Your viewer ID:</strong> <span id="viewer-id">—</span>
+    </p>
+
+    <!-- Event log -->
+    <div class="log-section">
+      <h2>Live Event Log</h2>
+      <div class="log-box" id="log-box">
+        <div class="log-inner" id="log-inner">
+          <span class="log-empty">Waiting for events… press play to start.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Tracker (Phase 2) ───────────────────────────────────────────────────── -->
+  <script src="../tracker/tracker.js" data-demo-id="demo_001"></script>
+
+  <!-- ── Fetch monkey-patch + viewer ID display ──────────────────────────────── -->
+  <script>
+    // Display persisted viewer ID
+    document.getElementById('viewer-id').textContent =
+      localStorage.getItem('shocase_viewer_id') || '(not yet set)';
+
+    // ── Monkey-patch fetch to intercept tracker POSTs ─────────────────────────
+    var MAX_LOG_ENTRIES = 10;
+    var logInner = document.getElementById('log-inner');
+    var emptyMsg = logInner.querySelector('.log-empty');
+
+    var _realFetch = window.fetch.bind(window);
+
+    window.fetch = function (url, options) {
+      // Only intercept POSTs to our events endpoint
+      if (
+        typeof url === 'string' &&
+        url.includes('/events') &&
+        options &&
+        options.method === 'POST'
+      ) {
+        try {
+          var body = JSON.parse(options.body);
+          appendLog(body.event, body.demoId);
+        } catch (_) { /* ignore parse errors */ }
+      }
+      return _realFetch(url, options);
+    };
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function timeLabel() {
+      var now = new Date();
+      return pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    }
+
+    function appendLog(eventType, demoId) {
+      // Remove the "waiting" placeholder on first event
+      if (emptyMsg) {
+        emptyMsg.remove();
+        emptyMsg = null;
+      }
+
+      // Remove oldest entry if we already have 10
+      var entries = logInner.querySelectorAll('.log-entry');
+      if (entries.length >= MAX_LOG_ENTRIES) {
+        entries[entries.length - 1].remove(); // oldest is at the bottom of logInner
+      }
+
+      // Build new entry
+      var entry = document.createElement('span');
+      entry.className = 'log-entry';
+      entry.innerHTML =
+        '<span class="ts">[' + timeLabel() + ']</span>' +
+        '<span class="sep">·</span>' +
+        '<span class="ev">' + eventType + '</span>' +
+        '<span class="sep">→</span>' +
+        '<span class="did">' + demoId + '</span>';
+
+      // Prepend so newest appears at the top
+      logInner.insertBefore(entry, logInner.firstChild);
+    }
+  </script>
+</body>
+</html>
