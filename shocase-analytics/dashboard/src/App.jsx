@@ -13,8 +13,8 @@ const FUNNEL_STAGES = [
 
 const SAMPLE_DEMOS = [
   'demo_001',
-  'demo_quickstart',
-  'product_tour'
+  'demo_002',
+  'demo_003'
 ]
 
 export default function App() {

@@ -17,7 +17,7 @@ const insertStmt = db.prepare(`
 console.log('🌱 Seeding mock viewer session events...');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. DEMO 001: high-engagement onboarding video (Medium/High retention)
+// 1. DEMO_001: high-engagement onboarding video (Medium/High retention)
 // ─────────────────────────────────────────────────────────────────────────────
 const demo1 = 'demo_001';
 // Session 1: completed all the way
@@ -39,9 +39,9 @@ createSession(demo1, [ 'play' ], 80);
 createSession(demo1, [ 'play' ], 60);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. DEMO QUICKSTART: low-engagement developer guide (High early drop-off)
+// 2. DEMO_002: low-engagement developer guide (High early drop-off)
 // ─────────────────────────────────────────────────────────────────────────────
-const demo2 = 'demo_quickstart';
+const demo2 = 'demo_002';
 // 15 sessions play the video, but 10 drop immediately after starting (high early drop)
 for (let i = 0; i < 10; i++) {
   createSession(demo2, [ 'play' ], 400 + i * 10);
@@ -55,9 +55,9 @@ createSession(demo2, [ 'play', 'progress_25', 'progress_50', 'progress_75', 'end
 createSession(demo2, [ 'play', 'progress_25', 'progress_50', 'progress_75', 'ended' ], 100);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. PRODUCT TOUR: high mid-point drop-off (largest drop between 50% and 75%)
+// 3. DEMO_003: high mid-point drop-off (largest drop between 50% and 75%)
 // ─────────────────────────────────────────────────────────────────────────────
-const demo3 = 'product_tour';
+const demo3 = 'demo_003';
 // 12 sessions play, progress through 25% and 50%, but then drop heavily before 75%
 for (let i = 0; i < 4; i++) {
   createSession(demo3, [ 'play', 'progress_25', 'progress_50', 'progress_75', 'ended' ], 500 + i * 10);
