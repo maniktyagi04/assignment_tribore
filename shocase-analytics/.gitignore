@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# SQLite database (runtime data — not source)
+backend/data/
+
+# Build output
+dist/
+
+# OS noise
+.DS_Store
+*.log

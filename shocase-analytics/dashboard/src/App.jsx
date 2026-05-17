@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
 import './App.css'
 
-const BACKEND = 'http://localhost:3001'
+const BACKEND = ''   // Vite proxy forwards /demos/* and /events → localhost:3001
+
 
 const FUNNEL_STAGES = [
   { key: 'play',        label: 'Play'  },
