@@ -7,7 +7,7 @@ A stripped-down demo video analytics service. A vanilla JS tracker snippet embed
 
 ### Backend (Terminal 1)
 ```bash
-cd backend
+cd shocase-analytics/backend
 npm install
 npm run dev
 ```
@@ -15,14 +15,14 @@ Runs on http://localhost:3001
 
 ### Sample test page (Terminal 2)
 ```bash
-cd sample
+cd shocase-analytics/sample
 npx serve .
 ```
 Open http://localhost:3000 — play the video to generate tracking events
 
 ### Dashboard (Terminal 3)
 ```bash
-cd dashboard
+cd shocase-analytics/dashboard
 npm install
 npm run dev
 ```
