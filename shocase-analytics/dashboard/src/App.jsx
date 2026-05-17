@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 
 const BACKEND = ''   // Vite proxy forwards /demos/* and /events → localhost:3001
@@ -17,6 +17,36 @@ export default function App() {
   const [stats,   setStats]   = useState(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
+
+  // Dynamic real-time auto-polling sync without flickering loaders
+  useEffect(() => {
+    const trimmedId = demoId.trim();
+    if (!trimmedId) return;
+
+    let isMounted = true;
+
+    const pollStats = async () => {
+      try {
+        const res = await fetch(`${BACKEND}/demos/${trimmedId}/stats`);
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          setStats(data);
+          setError(null);
+        }
+      } catch (e) {
+        // Silent catch for background polling
+      }
+    };
+
+    pollStats(); // Load immediately on mount/change
+
+    const interval = setInterval(pollStats, 2500); // Polling sync loop
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [demoId]);
 
   const fetchStats = useCallback(async (targetId) => {
     const id = (typeof targetId === 'string' ? targetId : demoId).trim()

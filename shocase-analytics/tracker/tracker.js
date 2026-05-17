@@ -5,16 +5,27 @@
     console.warn('[shocase-tracker] No data-demo-id found on the script tag. Tracking disabled.');
   }
 
+  // High-fidelity compliant UUID generator fallback for non-secure secure-contexts/IP scopes
+  function generateUUID() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
   // ── 2. Retrieve or generate an anonymous, persistent viewerId ─────────────────
   var STORAGE_KEY = 'shocase_viewer_id';
   var viewerId = localStorage.getItem(STORAGE_KEY);
   if (!viewerId) {
-    viewerId = crypto.randomUUID();
+    viewerId = generateUUID();
     localStorage.setItem(STORAGE_KEY, viewerId);
   }
 
   // ── 3. Generate a unique sessionId for this page load session ───────────────
-  var sessionId = crypto.randomUUID();
+  var sessionId = generateUUID();
 
   // ── 4. Event Queue System ────────────────────────────────────────────────────
   var queue = [];
