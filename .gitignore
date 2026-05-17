@@ -1,0 +1,9 @@
+# Dependencies
+node_modules/
+
+# SQLite database (runtime data — not source)
+shocase-analytics/backend/data/
+
+# OS / editor noise
+.DS_Store
+*.log
