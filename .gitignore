@@ -7,3 +7,5 @@ shocase-analytics/backend/data/
 # OS / editor noise
 .DS_Store
 *.log
+shocase-analytics/dashboard/node_modules/
+shocase-analytics/dashboard/dist/
