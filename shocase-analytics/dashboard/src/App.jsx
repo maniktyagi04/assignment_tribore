@@ -3,7 +3,6 @@ import './App.css'
 
 const BACKEND = ''   // Vite proxy forwards /demos/* and /events → localhost:3001
 
-
 const FUNNEL_STAGES = [
   { key: 'play',        label: 'Play'  },
   { key: 'progress_25', label: '25%'   },
@@ -31,7 +30,7 @@ export default function App() {
       }
       if (!res.ok) throw new Error('Server error')
       setStats(await res.json())
-    } catch {
+    } catch (e) {
       setError('Failed to fetch stats. Is the backend running on port 3001?')
     } finally {
       setLoading(false)
@@ -88,7 +87,7 @@ export default function App() {
         </section>
 
         {/* ── Stats cards ──────────────────────────────────────────────────── */}
-        {stats && (
+        {stats && !loading && (
           <>
             <section className="cards-row">
               <StatCard label="Total Views"     value={stats.totalViews}                    />
@@ -96,6 +95,29 @@ export default function App() {
               <StatCard label="Avg Completion"  value={stats.avgCompletionPct + '%'}        />
               <StatCard label="Demo ID"         value={stats.demoId} mono                   />
             </section>
+
+            {/* ── Insights Section ─────────────────────────────────────────── */}
+            {stats.insights && (
+              <section className="insights-section">
+                <h2 className="insights-title">Performance Insights</h2>
+                <div className="insights-grid">
+                  <div className="insight-card">
+                    <span className="insight-label">📉 Biggest Drop-off</span>
+                    <span className="insight-value highlight-drop">{stats.insights.biggestDropOffPoint}</span>
+                  </div>
+                  <div className="insight-card">
+                    <span className="insight-label">💎 Engagement Quality</span>
+                    <span className={`insight-value highlight-quality-${stats.insights.engagementQuality.toLowerCase()}`}>
+                      {stats.insights.engagementQuality}
+                    </span>
+                  </div>
+                  <div className="insight-card">
+                    <span className="insight-label">📊 Retention Summary</span>
+                    <span className="insight-value">{stats.insights.retentionSummary}</span>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* ── Drop-off funnel ──────────────────────────────────────────── */}
             <section className="funnel-section">
@@ -105,16 +127,19 @@ export default function App() {
                   const count = stats.funnel[key] ?? 0
                   return (
                     <div className="funnel-row" key={key}>
-                      <span className="funnel-label">{label}</span>
+                      <div className="funnel-meta">
+                        <span className="funnel-stage">{label}</span>
+                        <span className="funnel-stats">
+                          <strong className="funnel-count">{count}</strong>
+                          <span className="funnel-pct"> viewers ({pct(count)})</span>
+                        </span>
+                      </div>
                       <div className="bar-track">
                         <div
                           className="bar-fill"
                           style={{ width: barWidth(count) }}
                         />
                       </div>
-                      <span className="funnel-count">
-                        {count} <span className="funnel-pct">({pct(count)})</span>
-                      </span>
                     </div>
                   )
                 })}
@@ -123,10 +148,31 @@ export default function App() {
           </>
         )}
 
+        {/* ── Loading State ────────────────────────────────────────────────── */}
+        {loading && (
+          <div className="loading-state-card">
+            <div className="pulse-loader" />
+            <p className="loading-text">Analyzing video retention logs...</p>
+          </div>
+        )}
+
         {/* ── Empty state ──────────────────────────────────────────────────── */}
-        {!stats && !loading && !error && (
-          <div className="empty-state">
-            <p>Enter a Demo ID above and click <strong>Fetch Stats</strong> to load analytics.</p>
+        {!stats && !loading && (
+          <div className="empty-state-card">
+            <div className="empty-icon">📊</div>
+            <h3 className="empty-title">Ready to Fetch</h3>
+            <p className="empty-text">
+              Enter a Demo ID above (such as <code>demo_001</code>) and click <strong>Fetch Stats</strong> to query its performance.
+            </p>
+            <div className="guidance-box">
+              <h4 className="guidance-title">💡 How to generate test events:</h4>
+              <ol className="guidance-list">
+                <li>Make sure the backend is active, then launch your test page at <code>http://localhost:3000</code>.</li>
+                <li>Play, pause, or fast-forward the demo video to trigger tracking points.</li>
+                <li>The upgraded tracker will queue, buffer, and batch-dispatch events within 2 seconds.</li>
+                <li>Search that Demo ID here to view live, session-aware retention insights!</li>
+              </ol>
+            </div>
           </div>
         )}
 
