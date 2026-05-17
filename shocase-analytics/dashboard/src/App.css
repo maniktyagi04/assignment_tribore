@@ -86,7 +86,7 @@ body {
 }
 
 /* ── Search bar ────────────────────────────────────────────────────────────── */
-.search-section { display: flex; flex-direction: column; gap: 8px; }
+.search-section { display: flex; flex-direction: column; gap: 10px; }
 .search-label {
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -124,6 +124,47 @@ body {
 }
 .search-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .search-btn:not(:disabled):hover { opacity: 0.85; }
+
+/* Quick select chips */
+.samples-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.samples-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.sample-chip {
+  background: #141414;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  outline: none;
+}
+.sample-chip:hover {
+  border-color: var(--accent);
+  color: #fff;
+}
+.sample-chip.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.sample-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 /* spinner */
 .spinner {

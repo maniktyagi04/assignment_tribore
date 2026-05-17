@@ -11,19 +11,26 @@ const FUNNEL_STAGES = [
   { key: 'ended',       label: 'Ended' },
 ]
 
+const SAMPLE_DEMOS = [
+  'demo_001',
+  'demo_quickstart',
+  'product_tour'
+]
+
 export default function App() {
   const [demoId,  setDemoId]  = useState('demo_001')
   const [stats,   setStats]   = useState(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
 
-  const fetchStats = useCallback(async () => {
-    if (!demoId.trim()) return
+  const fetchStats = useCallback(async (targetId) => {
+    const id = (typeof targetId === 'string' ? targetId : demoId).trim()
+    if (!id) return
     setLoading(true)
     setError(null)
     setStats(null)
     try {
-      const res = await fetch(`${BACKEND}/demos/${demoId.trim()}/stats`)
+      const res = await fetch(`${BACKEND}/demos/${id}/stats`)
       if (res.status === 404) {
         setError('No data found for this demo ID.')
         return
@@ -77,12 +84,30 @@ export default function App() {
             />
             <button
               className="search-btn"
-              onClick={fetchStats}
+              onClick={() => fetchStats()}
               disabled={loading}
             >
               {loading ? <span className="spinner" /> : 'Fetch Stats'}
             </button>
           </div>
+
+          <div className="samples-row">
+            <span className="samples-label">Quick select:</span>
+            {SAMPLE_DEMOS.map((id) => (
+              <button
+                key={id}
+                className={`sample-chip ${demoId === id ? 'active' : ''}`}
+                onClick={() => {
+                  setDemoId(id);
+                  fetchStats(id);
+                }}
+                disabled={loading}
+              >
+                {id}
+              </button>
+            ))}
+          </div>
+
           {error && <p className="error-msg">{error}</p>}
         </section>
 
@@ -162,7 +187,7 @@ export default function App() {
             <div className="empty-icon">📊</div>
             <h3 className="empty-title">Ready to Fetch</h3>
             <p className="empty-text">
-              Enter a Demo ID above (such as <code>demo_001</code>) and click <strong>Fetch Stats</strong> to query its performance.
+              Enter a Demo ID above (such as <code>demo_001</code>) or click a quick-select chip to query its performance.
             </p>
             <div className="guidance-box">
               <h4 className="guidance-title">💡 How to generate test events:</h4>
