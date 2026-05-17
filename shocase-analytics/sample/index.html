@@ -57,6 +57,43 @@
       width: 100%;
     }
 
+    /* Custom controls */
+    .player-controls {
+      display: flex;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #141414;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    .control-btn {
+      flex: 1;
+      background: #252529;
+      border: 1px solid #3a3a40;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      outline: none;
+    }
+
+    .control-btn:hover {
+      background: #7c6fef;
+      border-color: #7c6fef;
+      transform: translateY(-1px);
+    }
+
+    .control-btn:active {
+      transform: translateY(0);
+    }
+
     /* ── Meta strip below video ── */
     .meta-strip {
       display: flex;
@@ -193,6 +230,12 @@
         preload="metadata"
       ></video>
 
+      <!-- Clickable custom play/pause buttons -->
+      <div class="player-controls">
+        <button id="btn-play" class="control-btn">▶ Play Video</button>
+        <button id="btn-pause" class="control-btn">⏸ Pause Video</button>
+      </div>
+
       <div class="meta-strip">
         <span class="badge" id="demo-badge">demo_001</span>
         <span class="hint">Open the dashboard at <code>GET /demos/demo_001/stats</code></span>
@@ -224,6 +267,17 @@
     // Display persisted viewer ID
     document.getElementById('viewer-id').textContent =
       localStorage.getItem('shocase_viewer_id') || '(not yet set)';
+
+    // Playback control event listeners
+    var video = document.querySelector('video');
+    document.getElementById('btn-play').addEventListener('click', function() {
+      video.play().catch(function(err) {
+        console.error('Playback trigger failed:', err);
+      });
+    });
+    document.getElementById('btn-pause').addEventListener('click', function() {
+      video.pause();
+    });
 
     // ── Monkey-patch fetch to intercept tracker POSTs ─────────────────────────
     var MAX_LOG_ENTRIES = 10;
