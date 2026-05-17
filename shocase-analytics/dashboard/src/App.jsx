@@ -11,11 +11,6 @@ const FUNNEL_STAGES = [
   { key: 'ended',       label: 'Ended' },
 ]
 
-const SAMPLE_DEMOS = [
-  'demo_001',
-  'demo_002',
-  'demo_003'
-]
 
 export default function App() {
   const [demoId,  setDemoId]  = useState('demo_001')
@@ -89,23 +84,6 @@ export default function App() {
             >
               {loading ? <span className="spinner" /> : 'Fetch Stats'}
             </button>
-          </div>
-
-          <div className="samples-row">
-            <span className="samples-label">Quick select:</span>
-            {SAMPLE_DEMOS.map((id) => (
-              <button
-                key={id}
-                className={`sample-chip ${demoId === id ? 'active' : ''}`}
-                onClick={() => {
-                  setDemoId(id);
-                  fetchStats(id);
-                }}
-                disabled={loading}
-              >
-                {id}
-              </button>
-            ))}
           </div>
 
           {error && <p className="error-msg">{error}</p>}
