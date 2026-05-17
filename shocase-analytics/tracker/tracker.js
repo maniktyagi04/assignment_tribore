@@ -22,9 +22,10 @@
 
   // Queue a tracking event
   function sendEvent(eventType) {
-    if (!demoId) return; // Silent exit if tracking disabled
+    var activeDemoId = window.SHOCASE_DEMO_ID || demoId;
+    if (!activeDemoId) return; // Silent exit if tracking disabled
     queue.push({
-      demoId:    demoId,
+      demoId:    activeDemoId,
       viewerId:  viewerId,
       sessionId: sessionId,
       event:     eventType,
@@ -87,8 +88,14 @@
 
     // Quartile progress tracking
     var firedQuartiles = new Set();
+    var lastDemoId = window.SHOCASE_DEMO_ID || demoId;
 
     video.addEventListener('timeupdate', function () {
+      var activeDemoId = window.SHOCASE_DEMO_ID || demoId;
+      if (activeDemoId !== lastDemoId) {
+        firedQuartiles.clear();
+        lastDemoId = activeDemoId;
+      }
       var duration = video.duration;
       var currentTime = video.currentTime;
 

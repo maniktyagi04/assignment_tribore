@@ -100,23 +100,41 @@
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
       padding: 14px 18px;
       border-top: 1px solid #2a2a2a;
     }
 
-    .badge {
-      display: inline-flex;
+    .select-wrapper {
+      display: flex;
       align-items: center;
-      gap: 6px;
-      background: #7c6fef22;
-      border: 1px solid #7c6fef55;
-      border-radius: 999px;
-      padding: 3px 12px;
+      gap: 10px;
+    }
+
+    .select-label {
       font-size: 0.75rem;
-      color: #a89ff7;
       font-weight: 600;
-      letter-spacing: 0.03em;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .demo-dropdown {
+      background: #252529;
+      border: 1px solid #3a3a40;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+    }
+
+    .demo-dropdown:focus {
+      border-color: #7c6fef;
     }
 
     .badge::before {
@@ -238,8 +256,15 @@
       </div>
 
       <div class="meta-strip">
-        <span class="badge" id="demo-badge">demo_001</span>
-        <span class="hint">Open the dashboard at <code>GET /demos/demo_001/stats</code></span>
+        <div class="select-wrapper">
+          <label for="demo-select" class="select-label">Active Demo ID:</label>
+          <select id="demo-select" class="demo-dropdown">
+            <option value="demo_001">demo_001 (Big Buck Bunny)</option>
+            <option value="demo_002">demo_002 (Flower Clip)</option>
+            <option value="demo_003">demo_003 (Sintel Trailer)</option>
+          </select>
+        </div>
+        <span class="hint">Open dashboard at <code>GET /demos/<span id="hint-demo-id">demo_001</span>/stats</code></span>
       </div>
     </div>
 
@@ -278,6 +303,49 @@
     });
     document.getElementById('btn-pause').addEventListener('click', function() {
       video.pause();
+    });
+
+    // Dynamic demo switcher and video swapping logic
+    var demoSelect = document.getElementById('demo-select');
+    var hintDemoId = document.getElementById('hint-demo-id');
+
+    // Video URL mappings for each Demo ID
+    var VIDEO_SOURCES = {
+      demo_001: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      demo_002: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+      demo_003: 'https://media.w3.org/2010/05/sintel/trailer_hd.mp4'
+    };
+
+    demoSelect.addEventListener('change', function() {
+      var selectedDemo = demoSelect.value;
+      
+      // 1. Update the tracker's dynamic config
+      window.SHOCASE_DEMO_ID = selectedDemo;
+
+      // 2. Update hint display
+      hintDemoId.textContent = selectedDemo;
+
+      // 3. Swap the active video source element and load it
+      var sources = video.querySelectorAll('source');
+      if (sources.length > 0) {
+        // Swap sources dynamically so browser plays the correct one
+        var mainSrc = VIDEO_SOURCES[selectedDemo];
+        sources[0].setAttribute('src', mainSrc);
+        
+        // Also update any fallback sources to keep it resilient
+        if (selectedDemo === 'demo_002') {
+          sources[1].setAttribute('src', VIDEO_SOURCES['demo_001']);
+        } else if (selectedDemo === 'demo_003') {
+          sources[1].setAttribute('src', VIDEO_SOURCES['demo_002']);
+        } else {
+          sources[1].setAttribute('src', VIDEO_SOURCES['demo_002']);
+        }
+        
+        video.load();
+        
+        // Auto-play the newly switched video for a dynamic premium UX!
+        video.play().catch(function() {});
+      }
     });
 
     // ── Monkey-patch fetch to intercept tracker POSTs ─────────────────────────
