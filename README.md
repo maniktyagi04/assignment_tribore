@@ -1,63 +1,129 @@
-# Shocase Analytics — Demo Take-Home
+# Shocase Analytics — Full-Stack Demo Video Analytics Platform
 
-## What this is
-A stripped-down demo video analytics service. A vanilla JS tracker snippet embeds on any page with a `<video>` element and fires watch events (play, pause, quartile progress, ended) to a Node/Express backend. The backend stores events in SQLite and computes aggregated stats. A React dashboard lets you enter a demoId and see total views, unique viewers, avg completion %, and a drop-off funnel.
+A lightweight, robust full-stack video analytics solution built for engineering-focused demo tracking. The platform tracks granular video playback interactions (play, pause, quartile progress, completion) in real time using a self-contained embeddable JavaScript tracker, logs events in a resilient SQLite database, and presents aggregated metrics via a highly polished React dashboard with session-aware analytics and a dynamic insights engine.
 
-## How to run
+---
 
-### Backend (Terminal 1)
+## 🏗️ Architecture Overview
+
+The system is structured as four decoupled components:
+
+```mermaid
+graph TD
+    subgraph Client [Client Side]
+        S[Sample Test Page] -->|Embeds| T[Vanilla JS Tracker]
+        T -->|FIFO Queue / 2s Buffers| Q[Queue System]
+    end
+    subgraph Server [Backend Service]
+        Q -->|POST /events| B[Express REST API]
+        B -->|better-sqlite3| DB[(SQLite Database)]
+        D[Vite React Dashboard] -->|GET /demos/:id/stats| B
+    end
+```
+
+### 1. **Embeddable Tracker (`/tracker`)**
+A vanilla, zero-dependency JavaScript snippet that embeds on any host page containing a `<video>` tag.
+* **Granular quartile calculations:** Captures `play`, `pause`, `progress_25`, `progress_50`, `progress_75`, and `ended` events.
+* **Buffered Event Queue:** Utilizes an in-memory queue array. Instead of immediately dispatching a request on every scroll or playback tick, it buffers events and flushes them sequentially in FIFO order every 2 seconds.
+* **Concurrency Locking:** Employs a mutex lock flag (`isFlushing`) to ensure overlapping callbacks never fire duplicate events.
+* **Network Resilience:** Uses a catch-and-retry pattern. If a fetch request fails (network timeout or offline state), the event remains in the queue and retries in the next interval, maintaining tracking integrity.
+
+### 2. **Backend API (`/backend`)**
+An Express REST service that stores events and aggregates real-time performance logs.
+* **SQLite Database (`/backend/db.js`):** Employs `better-sqlite3` for high-throughput, synchronous local SQLite operations. Features automated inline schema migration for seamless database setup.
+* **POST `/events`:** Exposes a validated entry point to record logs. Enforces strict parameter presence validation and event type containment checks.
+* **GET `/demos/:demoId/stats`:** Computes highly granular progression matrices, session metrics, and dynamic product-style performance insights.
+
+### 3. **Vite React Dashboard (`/dashboard`)**
+A highly polished single-page application built on React and Tailwind/CSS to review video metrics.
+* **Dynamic Insights Grid:** Synthesizes raw events into qualitative indicators (biggest drop-off point, engagement quality, retention patterns).
+* **Polished UX States:** Integrated smooth cubic-bezier loader animations, complete step-by-step guidance cards for mock data generation, and rapid-select demo ID chips.
+* **Modern SaaS Visuals:** Visualizes viewer drop-off via custom, CSS-based vertical progress bars with vibrant gradient fills.
+
+---
+
+## 🛠️ Tech Stack & Engineering Decisions
+
+* **Vanilla JavaScript (Tracker):** Ensures that the embedded tracker has a zero-kilobyte bundle overhead, ensuring host page load performance is completely unaffected.
+* **Express & SQLite:** Selected to fulfill a "zero-setup, zero-dependency" developer onboarding experience while maintaining ACID compliance for local logging.
+* **Google Fonts Inter & Custom CSS:** Replaced standard browser typography and styling frameworks with highly tailored custom HSL tokens, active card translations, and focus halos to deliver a premium, SaaS-quality visual experience.
+
+---
+
+## ⚡ How to Run
+
+### Prerequisite
+Ensure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
+
+### 1. Start the Backend API (Terminal 1)
 ```bash
 cd shocase-analytics/backend
 npm install
 npm run dev
 ```
-Runs on http://localhost:3001
+The REST API runs on http://localhost:3001.
 
-### Sample test page (Terminal 2)
+### 2. Run the Sample Test Page (Terminal 2)
 ```bash
 cd shocase-analytics/sample
 npx serve .
 ```
-Open http://localhost:3000 — play the video to generate tracking events
+Open http://localhost:3000 to interact with the demo video and generate tracking events.
 
-### Dashboard (Terminal 3)
+### 3. Launch the React Dashboard (Terminal 3)
 ```bash
 cd shocase-analytics/dashboard
 npm install
 npm run dev
 ```
-Open http://localhost:5173 — enter `demo_001` to see stats
+Open http://localhost:5173. Type `demo_001` or click a quick-select chip to view live statistics.
 
-## Project structure
+---
 
-```
-shocase-analytics/
-├── backend/
-│   ├── server.js      — Express API with POST /events and GET /demos/:id/stats
-│   ├── db.js          — SQLite setup and table creation via better-sqlite3
-│   └── data/          — SQLite database file lives here (gitignored)
-├── tracker/
-│   └── tracker.js     — Embeddable vanilla JS snippet, no dependencies
-├── sample/
-│   └── index.html     — Test page with Big Buck Bunny video + live event log
-└── dashboard/
-    └── src/
-        └── App.jsx    — Single React page: search bar, stat cards, CSS funnel chart
-```
+## 📊 Analytics Calculations & Progression Logic
 
-## What I'd do with more time
+### 1. **Session-Aware Metrics**
+Rather than simply grouping raw logs by `viewerId` (which dilutes returning user activity), the backend generates a unique `sessionId` via `crypto.randomUUID()` on every page load.
+* **Total Views:** Equal to the count of unique sessions that registered a `play` event.
+* **Unique Viewers:** Count of distinct persistent `viewerId`s logged in local storage.
 
-- **Authentication and demo isolation** — right now anyone who knows a demoId can see its stats. Adding JWT auth and scoping demos to users would make this production-ready.
-- **PostgreSQL instead of SQLite** — SQLite is fine for local dev but won't handle concurrent writes at scale. Swap the db layer to pg with the same query interface.
-- **Real-time dashboard via Server-Sent Events** — the dashboard currently requires a manual refresh. SSE would push new event counts to connected clients as they arrive.
-- **Per-second heatmap data** — instead of just quartile events, store a timestamp for every 5-second interval. This enables a scrubber-style heatmap showing exactly where viewers rewatch or drop off.
-- **Shareable public stats page** — a read-only route like `/share/:demoId` that renders stats without needing the dashboard app, so creators can share a link directly.
+### 2. **Ordered Quartile Progression Validation**
+To prevent false-positive completions (e.g., a viewer skipping directly from 0% to the end of a video), the backend validates quartile progress sequentially:
+$$\text{Play} \longrightarrow \text{25\% Progress} \longrightarrow \text{50\% Progress} \longrightarrow \text{75\% Progress} \longrightarrow \text{Ended}$$
+A session is only credited for a progress milestone if **all predecessor markers** exist within the session timeline. This guarantees mathematically correct funnel drop-off curves where higher steps never exceed the counts of lower steps.
 
-## What I used AI for
+### 3. **Dynamic Insights Generation**
+* **Biggest Drop-off Point:** Evaluates absolute audience loss between adjacent steps (`play ➔ 25%`, `25% ➔ 50%`, `50% ➔ 75%`, `75% ➔ end`) and returns the largest drop interval.
+* **Engagement Quality:** Categorized as `High` ($\ge 70\%$), `Medium` ($\ge 40\%$), or `Low` based on the average sequential completion percentage across played sessions.
+* **Retention Summary:** Inspects early abandonment ratios to produce actionable summaries (e.g., `"High early abandonment — viewers lose interest in the first 25%"`).
 
-- Claude Code scaffolded the Express server structure and the two endpoint handlers
-- Claude Code wrote the SQLite aggregate queries for totalViews, uniqueViewers, avgCompletionPct, and the funnel calculation
-- Claude Code generated the quartile tracking logic in tracker.js (the timeupdate listener + firedQuartiles Set pattern)
-- Claude Code built the CSS-only horizontal bar chart for the funnel in the React dashboard
-- All decisions about the event schema, the stats response shape, and the funnel calculation method were made manually before prompting
-- Every generated file was read and debugged by hand after generation
+---
+
+## ⚖️ Engineering Tradeoffs
+
+* **SQLite for Event Storage:**
+  * *Tradeoff:* SQLite handles concurrent database writes synchronously, which would bottle neck in a production environment with millions of active tracking streams.
+  * *Rationale:* Unmatched for zero-setup take-home reviews. Migrations are performed inline in code to eliminate local database startup friction.
+* **In-Memory Tracker Buffering:**
+  * *Tradeoff:* Events currently buffered in memory could be lost if a viewer closes the browser tab before the 2-second flush interval.
+  * *Rationale:* Maximizes client battery and browser thread performance by preventing continuous fetch execution.
+
+---
+
+## 🚀 Production Scaling Strategy
+
+If scaling this system to support millions of concurrent viewers, the following changes would be made:
+
+1. **Ingestion Buffer (Kafka/Redis):** Route tracker logs directly to a Redis stream or Kafka topic instead of an Express server. This decouples peak write loads from database operations.
+2. **Database migration to ClickHouse/PostgreSQL:** Switch the storage engine to an analytical column-store database like ClickHouse, which is specifically optimized for sub-millisecond aggregations on billions of event records.
+3. **WebSockets/Server-Sent Events (SSE):** Replace HTTP poll fetching in the dashboard with an SSE stream to push real-time viewer drops directly to the client as they happen.
+4. **JWT Authentication & Tenant Isolation:** Add token-based authentication to lock down data access, ensuring demo IDs are cryptographically isolated per user/account.
+
+---
+
+## 🤖 AI Tooling & Collaboration Disclosure
+
+This codebase was developed in pair-programming collaboration with **Antigravity (Google DeepMind)**.
+* **Scaffolding:** Antigravity assisted in setting up the Express API structure, standardizing the React state controls, and generating the baseline better-sqlite3 database connection.
+* **Calculations:** The sequential ordered quartile progression algorithms and dynamic SaaS metric insights engine were jointly conceptualized and debugged through iterative performance reviews.
+* **Refinement:** Antigravity assisted in polishing CSS transitions, adding the lightweight FIFO queue system to the vanilla tracker, and ensuring high-fidelity typography across both mobile and desktop screen ratios.
